@@ -1,0 +1,47 @@
+name: Build Studio Rivalz (.3dsx)
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  logic-tests:
+    name: Game logic tests (host)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run unit tests
+        run: make -C tests run
+
+  build-3dsx:
+    name: Native 3DS build
+    runs-on: ubuntu-latest
+    container: devkitpro/devkitarm:latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compile
+        run: |
+          set -o pipefail
+          make 2>&1 | tee build.log
+
+      - name: Report compiler errors as annotations
+        if: failure()
+        run: |
+          grep -E "error|Error|undefined reference" build.log | head -50 | while IFS= read -r line; do
+            echo "::error::${line}"
+          done
+
+      - name: Show output
+        run: ls -la studio-rivalz.3dsx
+
+      - name: Upload .3dsx
+        uses: actions/upload-artifact@v4
+        with:
+          name: studio-rivalz-3dsx
+          path: studio-rivalz.3dsx
+          if-no-files-found: error

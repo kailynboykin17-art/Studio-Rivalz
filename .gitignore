@@ -1,0 +1,10 @@
+build/
+romfs/gfx/
+*.3dsx
+*.elf
+*.smdh
+*.cia
+*.map
+tests/test_logic
+tools/__pycache__/
+.DS_Store
